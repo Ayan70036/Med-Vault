@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedVault - Doctor Dashboard</title>
+
+    <style>
+        /* --- Global Variables & Reset --- */
+        :root {
+            --primary-color: #0284c7;
+            --primary-hover: #0369a1;
+            --bg-color: #f4f7f6;
+            --sidebar-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05);
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* --- Layout --- */
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* --- Sidebar Styling --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            box-shadow: var(--shadow-sm);
+            z-index: 10;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 24px;
+            padding-left: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .doctor-badge {
+            background-color: #f0f9ff;
+            color: var(--primary-color);
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            border: 1px solid #bae6fd;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+
+        .sidebar button {
+            width: 100%;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-md);
+            text-align: left;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar button:hover {
+            background-color: #f8fafc;
+            color: var(--primary-color);
+        }
+
+        .btn-logout {
+            color: var(--danger) !important;
+            margin-top: 15px;
+        }
+
+        .btn-logout:hover {
+            background-color: #fef2f2 !important;
+        }
+
+        /* --- Content Area --- */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .top-header {
+            background: var(--white);
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .top-header h2 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .content {
+            padding: 40px;
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Component Styling (Cards, Badges, Forms) --- */
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-success { background-color: #d1fae5; color: #065f46; }
+
+        /* Buttons Inside Cards */
+        .btn-action {
+            padding: 10px 18px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.95rem;
+            margin-top: 10px;
+        }
+        .btn-primary { background: var(--primary-color); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background-color: #f8fafc;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: var(--white);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+
+        /* Table (Audit Logs) */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        th {
+            background-color: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        /* Record / File View Styling */
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .file-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; padding: 15px; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between;}
+            .brand { margin-bottom: 0; }
+            .doctor-badge { display: none; }
+            .nav-menu { flex-direction: row; flex-wrap: wrap; width: 100%; margin-top: 15px;}
+            .sidebar button { width: calc(50% - 5px); justify-content: center;}
+            .top-header { padding: 15px 20px; flex-direction: column; align-items: flex-start; gap: 10px; }
+            .content { padding: 20px; }
+            .file-card { flex-direction: column; align-items: flex-start; gap: 15px; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <div class="sidebar">
+        <div class="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            MedVault
+        </div>
+
+        <div class="doctor-badge">
+            Doctor Workspace
+        </div>
+
+        <div class="nav-menu">
+            <button onclick="showRequestAccess()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                Request Access
+            </button>
+            <button onclick="loadPatients()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                My Patients
+            </button>
+            <button onclick="showViewRecords()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                View Records
+            </button>
+            <button onclick="showViewFiles()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+                View Files
+            </button>
+            <button onclick="showUploadRecord()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="12" y1="18" x2="12" y2="12"></line><line x1="9" y1="15" x2="15" y2="15"></line></svg>
+                Upload Record
+            </button>
+            <button onclick="showUploadFile()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                Upload File
+            </button>
+            <button onclick="loadAudit()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                Audit Logs
+            </button>
+
+            <button class="btn-logout" onclick="logout()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <div class="main-wrapper">
+        <div class="top-header">
+            <h2 id="welcome">Loading Active Session...</h2>
+            <span class="badge badge-success">System Secure</span>
+        </div>
+
+        <div class="content">
+            <div id="content">
+                <div class="card" style="text-align: center; padding: 60px 20px;">
+                    <h2 style="color: var(--primary-color); margin-bottom: 10px;">Welcome To MedVault Doctor Portal</h2>
+                    <p class="text-muted">Select an option from the sidebar to manage patient diagnostics.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let doctorEmail = "";
+
+    window.onload = async function() {
+        const response = await fetch("/auth/me");
+        doctorEmail = await response.text();
+        document.getElementById("welcome").innerText = "Logged In : " + doctorEmail;
+    };
+
+    function showRequestAccess() {
+        document.getElementById("content").innerHTML =
+            "<h3 class='section-title'>Request Access</h3>"
+            + "<div class='card'>"
+            + "<div class='form-group'><label>Patient Email</label>"
+            + "<input id='patientEmail' placeholder='Enter patient email address'></div>"
+            + "<div class='form-group'><label>Requested Days</label>"
+            + "<input id='requestedDays' type='number' placeholder='Duration (in days)'></div>"
+            + "<button class='btn-action btn-primary' style='width: 100%;' onclick='requestAccess()'>Send Request</button>"
+            + "</div>";
+    }
+
+    async function requestAccess() {
+        const data = {
+            doctorEmail: doctorEmail,
+            patientEmail: document.getElementById("patientEmail").value,
+            requestedDays: parseInt(document.getElementById("requestedDays").value)
+        };
+
+        const response = await fetch("/access/request", {
+            method:"POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.text();
+        alert(result);
+    }
+
+    async function loadPatients() {
+        const response = await fetch("/access/doctor/" + doctorEmail);
+        const patients = await response.json();
+
+        let html = "<h3 class='section-title'>Approved Patients</h3>";
+
+        if(patients.length === 0){
+            html += "<div class='card'><p class='text-muted'>No Approved Patients</p></div>";
+        }
+
+        patients.forEach(patient => {
+            html +=
+                "<div class='card'>"
+                + "<h4 style='color: var(--text-dark); margin-bottom: 8px;'>👤 " + patient.patientName + "</h4>"
+                + "<p style='color: var(--text-muted); font-size: 0.95rem;'>📧 <b>Email:</b> " + patient.patientEmail + "</p>"
+                + "</div>";
+        });
+
+        document.getElementById("content").innerHTML = html;
+    }
+
+    function showUploadRecord() {
+        document.getElementById("content").innerHTML =
+            "<h3 class='section-title'>Upload Record</h3>"
+            + "<div class='card'>"
+            + "<div class='form-group'><label>Patient Email</label>"
+            + "<input id='recordPatientEmail' placeholder='Enter patient email address'></div>"
+            + "<div class='form-group'><label>Medical Record Content</label>"
+            + "<textarea id='recordContent' rows='8' placeholder='Enter detailed medical notes, diagnosis, or prescription here...'></textarea></div>"
+            + "<button class='btn-action btn-primary' style='width: 100%;' onclick='uploadRecord()'>Upload Record</button>"
+            + "</div>";
+    }
+
+    async function uploadRecord() {
+        const data = {
+            doctorEmail: doctorEmail,
+            patientEmail: document.getElementById("recordPatientEmail").value,
+            content: document.getElementById("recordContent").value
+        };
+
+        const response = await fetch("/records", {
+            method:"POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        if(response.ok){
+            alert("Record Uploaded");
+        } else {
+            alert("Upload Failed");
+        }
+    }
+
+    function showUploadFile() {
+        document.getElementById("content").innerHTML =
+            "<h3 class='section-title'>Upload File</h3>"
+            + "<div class='card'>"
+            + "<div class='form-group'><label>Patient Email</label>"
+            + "<input id='filePatientEmail' placeholder='Enter patient email address'></div>"
+            + "<div class='form-group'><label>Select File</label>"
+            + "<input id='fileInput' type='file' style='padding: 10px; background: #fff;'></div>"
+            + "<button class='btn-action btn-primary' style='width: 100%;' onclick='uploadFile()'>Upload File</button>"
+            + "</div>";
+    }
+
+    async function uploadFile() {
+        const formData = new FormData();
+        formData.append("file", document.getElementById("fileInput").files[0]);
+        formData.append("doctorEmail", doctorEmail);
+        formData.append("patientEmail", document.getElementById("filePatientEmail").value);
+
+        const response = await fetch("/files/upload", {
+            method:"POST",
+            body:formData
+        });
+
+        const result = await response.text();
+        alert(result);
+    }
+
+    function showViewRecords() {
+        document.getElementById("content").innerHTML =
+            "<h3 class='section-title'>View Patient Records</h3>"
+            + "<div class='card'>"
+            + "<div class='form-group'><label>Search Records</label>"
+            + "<input id='viewRecordPatientEmail' placeholder='Enter patient email'></div>"
+            + "<button class='btn-action btn-primary' style='width: 100%;' onclick='loadPatientRecords()'>Load Records</button>"
+            + "</div>";
+    }
+
+    async function loadPatientRecords() {
+        const patientEmail = document.getElementById("viewRecordPatientEmail").value;
+        const response = await fetch(
+            "/records/patient?doctorEmail=" + doctorEmail + "&patientEmail=" + patientEmail
+        );
+        const records = await response.json();
+
+        let html = "<h3 class='section-title'>Patient Records</h3>";
+
+        if(records.length === 0){
+            html += "<div class='card'><p class='text-muted'>No Records Found</p></div>";
+        }
+
+        records.forEach(record => {
+            html +=
+                "<div class='card'>"
+                + "<div class='record-header'>"
+                + "<h4 style='color: var(--text-dark);'>👨‍⚕️ Dr. " + record.doctorName + "</h4>"
+                + "<span style='color: var(--text-muted); font-size: 0.85rem;'>📅 " + record.createdAt + "</span>"
+                + "</div><div>"
+                + "<p style='font-size: 0.9rem; font-weight: 600; margin-bottom: 5px;'>Record Content:</p>"
+                + "<p style='color: var(--text-muted); line-height: 1.5;'>" + record.content + "</p>"
+                + "</div></div>";
+        });
+
+        document.getElementById("content").innerHTML = html;
+    }
+
+    function showViewFiles() {
+        document.getElementById("content").innerHTML =
+            "<h3 class='section-title'>View Patient Files</h3>"
+            + "<div class='card'>"
+            + "<div class='form-group'><label>Search Files</label>"
+            + "<input id='viewFilePatientEmail' placeholder='Enter patient email'></div>"
+            + "<button class='btn-action btn-primary' style='width: 100%;' onclick='loadPatientFiles()'>Load Files</button>"
+            + "</div>";
+    }
+
+    async function loadPatientFiles() {
+        const patientEmail = document.getElementById("viewFilePatientEmail").value;
+        const response = await fetch(
+            "/files/doctor?doctorEmail=" + doctorEmail + "&patientEmail=" + patientEmail
+        );
+        const files = await response.json();
+
+        let html = "<h3 class='section-title'>Patient Files</h3>";
+
+        if(files.length === 0){
+            html += "<div class='card'><p class='text-muted'>No Files Found</p></div>";
+        }
+
+        files.forEach(file => {
+            html +=
+                "<div class='card file-card'>"
+                + "<div>"
+                + "<h4 style='margin-bottom: 5px; color: var(--text-dark);'>📄 " + file.originalName + "</h4>"
+                + "<p style='font-size: 0.85rem; color: var(--text-muted);'>Uploaded By: <b>" + file.uploadedBy + "</b></p>"
+                + "</div>"
+                + "<button class='btn-action btn-primary' onclick='downloadDoctorFile(" + file.id + ",\"" + patientEmail + "\")'>Download Asset</button>"
+                + "</div>";
+        });
+
+        document.getElementById("content").innerHTML = html;
+    }
+
+    function downloadDoctorFile(fileId, patientEmail) {
+        window.location.href =
+            "/files/download/" + fileId + "?doctorEmail=" + doctorEmail + "&patientEmail=" + patientEmail;
+    }
+
+    async function loadAudit() {
+        const response = await fetch("/audit/" + doctorEmail);
+        const logs = await response.json();
+
+        let html = "<h3 class='section-title'>System Audit Logs</h3>";
+
+        if(logs.length === 0){
+            html += "<div class='card'><p class='text-muted'>No Logs Found</p></div>";
+        } else {
+            html += 
+                "<div class='card' style='padding: 0; overflow: hidden;'>"
+                + "<table>"
+                + "<thead><tr><th>Action / Event</th><th>Timestamp</th></tr></thead>"
+                + "<tbody>";
+
+            logs.forEach(log => {
+                html +=
+                    "<tr>"
+                    + "<td><span style='font-weight: 500; color: var(--text-dark);'>" + log.action + "</span></td>"
+                    + "<td><span style='font-size: 0.85rem; color: var(--text-muted);'>" + log.createdAt + "</span></td>"
+                    + "</tr>";
+            });
+
+            html += "</tbody></table></div>";
+        }
+
+        document.getElementById("content").innerHTML = html;
+    }
+
+    async function logout() {
+        await fetch("/auth/logout", { method:"POST" });
+        window.location.href = "/";
+    }
+
+</script>
+
+</body>
+</html>

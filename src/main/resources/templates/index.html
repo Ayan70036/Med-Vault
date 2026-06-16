@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedVault - Secure Healthcare Portal</title>
+
+    <style>
+        /* --- Global Reset & Variables --- */
+        :root {
+            --primary-color: #0284c7;
+            --primary-hover: #0369a1;
+            --bg-color: #f4f7f6;
+            --white: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --emergency-color: #ef4444;
+            --emergency-hover: #dc2626;
+            --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --border-radius: 12px;
+            --transition: all 0.3s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* --- Main Layout Wrapper --- */
+        .portal-wrapper {
+            display: flex;
+            width: 100%;
+            max-width: 1100px;
+            background: var(--white);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            min-height: 650px;
+        }
+
+        /* --- Left Side: Branding & Features --- */
+        .portal-left {
+            flex: 1;
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+            color: var(--white);
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .portal-left::after {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            right: -50px;
+            width: 250px;
+            height: 250px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+
+        .brand-header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .brand-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+
+        .features-list {
+            list-style: none;
+            margin-top: 20px;
+        }
+
+        .features-list li {
+            font-size: 1.05rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px 20px;
+            border-radius: 8px;
+        }
+
+        /* --- Right Side: Forms --- */
+        .portal-right {
+            flex: 1;
+            padding: 50px 40px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: var(--white);
+            overflow-y: auto;
+        }
+
+        .form-section {
+            width: 100%;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .form-section h3 {
+            font-size: 1.75rem;
+            margin-bottom: 8px;
+            color: var(--text-dark);
+        }
+
+        .form-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 25px;
+            font-size: 0.95rem;
+        }
+
+        /* --- Form Elements --- */
+        input, select {
+            width: 100%;
+            padding: 14px 16px;
+            margin-bottom: 16px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: #f8fafc;
+            font-size: 1rem;
+            color: var(--text-dark);
+            transition: var(--transition);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: var(--white);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--primary-color);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-size: 1.05rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .toggle-text {
+            text-align: center;
+            margin-top: 20px;
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+
+        .link {
+            color: var(--primary-color);
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .link:hover {
+            text-decoration: underline;
+        }
+
+        /* --- Emergency Section --- */
+        .emergency-card {
+            margin-top: 40px;
+            padding-top: 30px;
+            border-top: 2px dashed #e2e8f0;
+        }
+
+        .emergency-card h3 {
+            color: var(--emergency-color);
+            font-size: 1.25rem;
+            margin-bottom: 15px;
+        }
+
+        .btn-emergency {
+            background-color: var(--emergency-color);
+            margin-top: 0;
+        }
+
+        .btn-emergency:hover {
+            background-color: var(--emergency-hover);
+        }
+
+        #emergencyResult {
+            margin-top: 20px;
+        }
+
+        .emergency-data-box {
+            background-color: #fef2f2;
+            border-left: 4px solid var(--emergency-color);
+            padding: 15px;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        /* Initial state for register form */
+        #registerForm {
+            display: none;
+        }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 900px) {
+            .portal-wrapper {
+                flex-direction: column;
+            }
+            .portal-left {
+                padding: 40px 30px;
+            }
+            .portal-right {
+                padding: 40px 30px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="portal-wrapper">
+
+    <div class="portal-left">
+        <div class="brand-header">
+            <h1>MedVault</h1>
+            <p>Advanced Clinical Information & Hospital Management Portal</p>
+        </div>
+
+        <ul class="features-list">
+            <li>🛡️ Secure Medical Records</li>
+            <li>🔐 Role-Based Access Control</li>
+            <li>🚑 Critical Emergency Access</li>
+            <li>📊 Immutable Audit Tracking</li>
+        </ul>
+    </div>
+
+    <div class="portal-right">
+
+        <div id="loginForm" class="form-section">
+            <h3>Welcome Back</h3>
+            <p class="form-subtitle">Please sign in to access your dashboard.</p>
+
+            <input id="loginEmail" placeholder="Email Address">
+            <input id="loginPassword" type="password" placeholder="Password">
+
+            <button onclick="login()">Login to Portal</button>
+
+            <p class="toggle-text">
+                Don't have an account?
+                <span class="link" onclick="showRegister()">Register</span>
+            </p>
+        </div>
+
+        <div id="registerForm" class="form-section">
+            <h3>Create Account</h3>
+            <p class="form-subtitle">Register a new system node credential.</p>
+
+            <input id="name" placeholder="Full Name">
+            <input id="email" placeholder="Email Address">
+            <input id="password" type="password" placeholder="Password">
+
+            <select id="role">
+                <option value="PATIENT">Patient Access</option>
+                <option value="DOCTOR">Licensed Doctor</option>
+            </select>
+
+            <button onclick="registerUser()">Register Account</button>
+
+            <p class="toggle-text">
+                Already have an account?
+                <span class="link" onclick="showLogin()">Login</span>
+            </p>
+        </div>
+
+        <div class="form-section emergency-card">
+            <h3>Emergency Access Override</h3>
+            <p class="form-subtitle" style="margin-bottom: 15px;">Enter a 12-digit emergency code to pull critical patient profiles immediately.</p>
+
+            <input id="emergencyCode" placeholder="Enter Emergency Code">
+            <button class="btn-emergency" onclick="searchEmergency()">Search Profile</button>
+
+            <div id="emergencyResult"></div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    function showRegister() {
+        document.getElementById("loginForm").style.display = "none";
+        document.getElementById("registerForm").style.display = "block";
+    }
+
+    function showLogin() {
+        document.getElementById("registerForm").style.display = "none";
+        document.getElementById("loginForm").style.display = "block";
+    }
+
+    async function registerUser() {
+        const data = {
+            name: document.getElementById("name").value,
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value,
+            role: document.getElementById("role").value
+        };
+
+        const response = await fetch("/auth/register", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            alert("Registration Failed");
+            return;
+        }
+
+        const result = await response.json();
+
+        alert("Registered Successfully\n\nEmergency Code:\n" + result.emergencyCode);
+        showLogin();
+    }
+
+    async function login() {
+        const data = {
+            email: document.getElementById("loginEmail").value,
+            password: document.getElementById("loginPassword").value
+        };
+
+        const response = await fetch("/auth/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        });
+
+        if (!response.ok) {
+            alert("Invalid Login");
+            return;
+        }
+
+        const user = await response.json();
+
+        if (user.role === "PATIENT") {
+            window.location.href = "/patient-dashboard";
+        } else {
+            window.location.href = "/doctor-dashboard";
+        }
+    }
+
+    async function searchEmergency() {
+        const code = document.getElementById("emergencyCode").value;
+
+        const response = await fetch("/emergency/" + code);
+
+        if (!response.ok) {
+            alert("Emergency Profile Not Found");
+            return;
+        }
+
+        const profile = await response.json();
+
+        // Fixed: field mapping modified from profile.medicalConditions to profile.conditions
+        document.getElementById("emergencyResult").innerHTML =
+            "<div class='emergency-data-box'>" +
+            "<p><b>Blood Group:</b> " + profile.bloodGroup + "</p>" +
+            "<p><b>Allergies:</b> " + profile.allergies + "</p>" +
+            "<p><b>Conditions:</b> " + profile.conditions + "</p>" +
+            "<p><b>Contact:</b> " + profile.emergencyContact + "</p>" +
+            "</div>";
+    }
+</script>
+
+</body>
+</html>

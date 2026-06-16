@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MedVault - Patient Dashboard</title>
+
+    <style>
+        /* --- Global Variables & Reset --- */
+        :root {
+            --primary-color: #0284c7;
+            --primary-hover: #0369a1;
+            --bg-color: #f4f7f6;
+            --sidebar-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --white: #ffffff;
+            --border-color: #e2e8f0;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.1);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.05);
+            --radius-lg: 12px;
+            --radius-md: 8px;
+            --transition: all 0.2s ease;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            overflow-x: hidden;
+        }
+
+        /* --- Layout --- */
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* --- Sidebar Styling --- */
+        .sidebar {
+            width: 260px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            padding: 24px 16px;
+            box-shadow: var(--shadow-sm);
+            z-index: 10;
+        }
+
+        .brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            margin-bottom: 24px;
+            padding-left: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .patient-badge {
+            background-color: #f0f9ff;
+            color: var(--primary-color);
+            padding: 10px 14px;
+            border-radius: var(--radius-md);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            border: 1px solid #bae6fd;
+        }
+
+        .nav-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex-grow: 1;
+        }
+
+        .sidebar button {
+            width: 100%;
+            padding: 12px 16px;
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-md);
+            text-align: left;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sidebar button:hover {
+            background-color: #f8fafc;
+            color: var(--primary-color);
+        }
+
+        .sidebar button.active {
+            background-color: var(--primary-color);
+            color: var(--white);
+        }
+
+        .btn-logout {
+            color: var(--danger) !important;
+            margin-top: auto;
+        }
+
+        .btn-logout:hover {
+            background-color: #fef2f2 !important;
+        }
+
+        /* --- Content Area --- */
+        .main-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .top-header {
+            background: var(--white);
+            padding: 20px 40px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .top-header h2 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .content {
+            padding: 40px;
+            max-width: 1100px;
+            margin: 0 auto;
+            width: 100%;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* --- Component Styling (Cards, Badges, Forms) --- */
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--text-dark);
+            font-weight: 600;
+        }
+
+        .card {
+            background: var(--white);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-md);
+            border: 1px solid var(--border-color);
+            margin-bottom: 20px;
+            transition: var(--transition);
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+        .badge-success { background-color: #d1fae5; color: #065f46; }
+        .badge-warning { background-color: #fef3c7; color: #92400e; }
+        .badge-danger { background-color: #fee2e2; color: #991b1b; }
+
+        /* Buttons Inside Cards */
+        .btn-action {
+            padding: 8px 16px;
+            border: none;
+            border-radius: var(--radius-md);
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.85rem;
+        }
+        .btn-primary { background: var(--primary-color); color: white; }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+
+        /* Forms (Emergency Profile) */
+        .form-group {
+            margin-bottom: 16px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: var(--text-dark);
+        }
+        input, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            background-color: #f8fafc;
+            font-size: 0.95rem;
+            transition: var(--transition);
+        }
+        input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            background-color: var(--white);
+            box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.15);
+        }
+
+        /* Table (Audit Logs) */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            text-align: left;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        th {
+            background-color: #f8fafc;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        /* --- Layout specific cards --- */
+        .record-header, .request-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .file-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        /* --- Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .sidebar { width: 100%; height: auto; padding: 15px; flex-direction: row; flex-wrap: wrap; align-items: center; justify-content: space-between;}
+            .brand { margin-bottom: 0; }
+            .patient-badge { display: none; }
+            .nav-menu { flex-direction: row; flex-wrap: wrap; width: 100%; margin-top: 15px;}
+            .sidebar button { width: calc(50% - 5px); justify-content: center;}
+            .top-header { padding: 15px 20px; }
+            .content { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <div class="sidebar">
+        <div class="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>
+            MedVault
+        </div>
+
+        <div class="patient-badge">
+            Patient Workspace
+        </div>
+
+        <div class="nav-menu">
+            <button onclick="loadRecords()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                Records
+            </button>
+            <button onclick="loadFiles()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                Files
+            </button>
+            <button onclick="loadRequests()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                Access Requests
+            </button>
+            <button onclick="loadEmergency()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                Emergency Profile
+            </button>
+            <button onclick="loadAudit()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                Audit Logs
+            </button>
+
+            <button class="btn-logout" onclick="logout()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                Logout
+            </button>
+        </div>
+    </div>
+
+    <div class="main-wrapper">
+        <div class="top-header">
+            <h2 id="welcome">Loading Active Session...</h2>
+            <span class="badge badge-success">System Secure</span>
+        </div>
+
+        <div class="content">
+            <div id="content">
+                <div class="card" style="text-align: center; padding: 60px 20px;">
+                    <h2 style="color: var(--primary-color); margin-bottom: 10px;">Welcome To MedVault</h2>
+                    <p class="text-muted">Select an option from the sidebar to view your clinical data.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<script>
+    let userEmail = "";
+
+    window.onload = async function() {
+        const response = await fetch("/auth/me");
+        userEmail = await response.text();
+        document.getElementById("welcome").innerText = "Logged In : " + userEmail;
+    };
+
+    async function loadRecords() {
+        const response = await fetch("/records/my/" + userEmail);
+        const records = await response.json();
+
+        let html = "<h3 class='section-title'>Medical Records</h3>";
+
+        if(records.length === 0){
+            html += "<div class='card'><p class='text-muted'>No Records Found</p></div>";
+        }
+
+        records.forEach(record => {
+            // Updated to use modern injected CSS strings
+            html +=
+                "<div class='card'>" +
+                    "<div class='record-header'>" +
+                        "<h4 style='color: var(--text-dark);'>👨‍⚕️ Dr. " + record.doctorName + "</h4>" +
+                        "<span style='color: var(--text-muted); font-size: 0.85rem;'>📅 " + record.createdAt + "</span>" +
+                    "</div>" +
+                    "<div>" +
+                        "<p style='font-size: 0.9rem; font-weight: 600; margin-bottom: 5px;'>Diagnosis / Details:</p>" +
+                        "<p style='color: var(--text-muted); line-height: 1.5;'>" + record.content + "</p>" +
+                    "</div>" +
+                "</div>";
+        });
+
+        document.getElementById("content").innerHTML = html;
+    }
+
+    async function loadFiles() {
+        const response = await fetch("/files/patient/" + userEmail);
+        const files = await response.json();
+
+        let html = "<h3 class='section-title'>Diagnostic Files</h3>";
+
+        if(files.length === 0){
+            html += "<div class='card'><p class='text-muted'>No Files Found</p></div>";
+        }
+
+        files.forEach(file => {
+            html +=
+                "<div class='card file-card'>" +
+                    "<div>" +
+                        "<h4 style='margin-bottom: 5px; color: var(--text-dark);'>📄 " + file.originalName + "</h4>" +
+                        "<p style='font-size: 0.85rem; color: var(--text-muted);'>Uploaded By: <b>" + file.uploadedBy + "</b></p>" +
+                    "</div>" +
+                    "<button class='btn-action btn-primary' onclick='downloadFile(" + file.id + ")'>Download Asset</button>" +
+                "</div>";
+        });
+
+        document.getElementById("content").innerHTML = html;
+    }
+
+    function downloadFile(id){
+        window.location.href = "/files/patient/download/" + id;
+    }
+
+    async function loadRequests() {
+        const response = await fetch("/access/patient/" + userEmail);
+        const requests = await response.json();
+
+        let html = "<h3 class='section-title'>Access Requests</h3>";
+
+        if(requests.length === 0){
+            html += "<div class='card'><p class='text-muted'>No Requests Found</p></div>";
+        }
+
+        requests.forEach(request => {
+
+            // Map status to styling dynamically
+            let badgeClass = "badge-warning";
+            if(request.status === "APPROVED") badgeClass = "badge-success";
+            if(request.status === "REJECTED" || request.status === "REVOKED") badgeClass = "badge-danger";
+
+            html +=
+                "<div class='card'>" +
+                    "<div class='request-header'>" +
+                        "<h4>Dr. " + request.doctor.name + "</h4>" +
+                        "<span class='badge " + badgeClass + "'>" + request.status + "</span>" +
+                    "</div>" +
+                    "<p style='color: var(--text-muted); font-size: 0.95rem;'><b>Requested Days:</b> " + request.requestedDays + "</p>" +
+                    "<div class='action-buttons'>";
+
+            if(request.status === "PENDING"){
+                html +=
+                    "<button class='btn-action btn-success' onclick='approve(" + request.id + ")'>Approve Access</button> " +
+                    "<button class='btn-action btn-danger' onclick='reject(" + request.id + ")'>Reject</button>";
+            }
+
+            if(request.status === "APPROVED"){
+                html +=
+                    "<button class='btn-action btn-danger' onclick='reject(" + request.id + ")'>Revoke Access</button>";
+            }
+
+            if(request.status === "REJECTED"){
+                html +=
+                    "<span style='color: var(--danger); font-size: 0.9rem; font-weight: 600;'>Access Rejected / Revoked</span>";
+            }
+
+            html += "</div></div>";
+        });
+
+        document.getElementById("content").innerHTML = html;
+    }
+
+    async function approve(id){
+        await fetch("/access/approve/" + id, { method: "PUT" });
+        loadRequests();
+    }
+
+    async function reject(id){
+        await fetch("/access/reject/" + id, { method: "PUT" });
+        loadRequests();
+    }
+
+    async function loadEmergency(){
+        try {
+            const response = await fetch("/emergency/profile/" + userEmail);
+            const profile = await response.json();
+
+            // Render Styled Medical Form using existing values
+            document.getElementById("content").innerHTML =
+                "<h3 class='section-title'>Emergency Profile</h3>" +
+                "<div class='card'>" +
+                    "<p class='text-muted' style='margin-bottom: 20px;'>These details are accessible globally in critical scenarios.</p>" +
+                    "<div class='form-group'>" +
+                        "<label>Blood Group</label>" +
+                        "<input id='bloodGroup' value='" + (profile.bloodGroup || "") + "' placeholder='e.g., O-Negative'>" +
+                    "</div>" +
+                    "<div class='form-group'>" +
+                        "<label>Known Allergies</label>" +
+                        "<input id='allergies' value='" + (profile.allergies || "") + "' placeholder='e.g., Penicillin'>" +
+                    "</div>" +
+                    "<div class='form-group'>" +
+                        "<label>Medical Conditions</label>" +
+                        "<input id='conditions' value='" + (profile.conditions || "") + "' placeholder='e.g., Asthma'>" +
+                    "</div>" +
+                    "<div class='form-group'>" +
+                        "<label>Emergency Contact</label>" +
+                        "<input id='emergencyContact' value='" + (profile.emergencyContact || "") + "' placeholder='e.g., +1 234 567 8900'>" +
+                    "</div>" +
+                    "<button class='btn-action btn-primary' style='width: 100%; margin-top: 10px; padding: 12px;' onclick='saveEmergency()'>Save Profile Configuration</button>" +
+                "</div>";
+
+        } catch(e) {
+            // Render Styled Medical Form if empty
+            document.getElementById("content").innerHTML =
+                "<h3 class='section-title'>Emergency Profile</h3>" +
+                "<div class='card'>" +
+                    "<p class='text-muted' style='margin-bottom: 20px;'>These details are accessible globally in critical scenarios.</p>" +
+                    "<div class='form-group'>" +
+                        "<label>Blood Group</label>" +
+                        "<input id='bloodGroup' placeholder='e.g., O-Negative'>" +
+                    "</div>" +
+                    "<div class='form-group'>" +
+                        "<label>Known Allergies</label>" +
+                        "<input id='allergies' placeholder='e.g., Penicillin'>" +
+                    "</div>" +
+                    "<div class='form-group'>" +
+                        "<label>Medical Conditions</label>" +
+                        "<input id='conditions' placeholder='e.g., Asthma'>" +
+                    "</div>" +
+                    "<div class='form-group'>" +
+                        "<label>Emergency Contact</label>" +
+                        "<input id='emergencyContact' placeholder='e.g., +1 234 567 8900'>" +
+                    "</div>" +
+                    "<button class='btn-action btn-primary' style='width: 100%; margin-top: 10px; padding: 12px;' onclick='saveEmergency()'>Save Profile Configuration</button>" +
+                "</div>";
+        }
+    }
+
+    async function saveEmergency(){
+        const data = {
+            patientEmail: userEmail,
+            bloodGroup: document.getElementById("bloodGroup").value,
+            allergies: document.getElementById("allergies").value,
+            conditions: document.getElementById("conditions").value,
+            emergencyContact: document.getElementById("emergencyContact").value
+        };
+
+        await fetch("/emergency/profile", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data)
+        });
+
+        alert("Emergency Profile Saved Successfully");
+    }
+
+    async function loadAudit(){
+        const response = await fetch("/audit/" + userEmail);
+        const logs = await response.json();
+
+        let html = "<h3 class='section-title'>System Audit Logs</h3>";
+
+        if(logs.length === 0){
+            html += "<div class='card'><p class='text-muted'>No Logs Found</p></div>";
+        } else {
+            // Render Professional Table Layout
+            html +=
+                "<div class='card' style='padding: 0; overflow: hidden;'>" +
+                    "<table>" +
+                        "<thead>" +
+                            "<tr>" +
+                                "<th>Action / Event</th>" +
+                                "<th>Timestamp</th>" +
+                            "</tr>" +
+                        "</thead>" +
+                        "<tbody>";
+
+            logs.forEach(log => {
+                html +=
+                    "<tr>" +
+                        "<td><span style='font-weight: 500; color: var(--text-dark);'>" + log.action + "</span></td>" +
+                        "<td><span style='font-size: 0.85rem; color: var(--text-muted);'>" + log.createdAt + "</span></td>" +
+                    "</tr>";
+            });
+
+            html += "</tbody></table></div>";
+        }
+
+        document.getElementById("content").innerHTML = html;
+    }
+
+    async function logout(){
+        await fetch("/auth/logout", { method: "POST" });
+        window.location.href = "/";
+    }
+</script>
+
+</body>
+</html>
